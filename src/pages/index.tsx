@@ -1,6 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { trpc } from "../utils/trpc";
+
+import { trpc } from "@/utils/trpc";
 
 const Home: NextPage = () => {
   const hello = trpc.useQuery(["example.hello", { text: "from tRPC" }]);
@@ -21,9 +22,7 @@ const Home: NextPage = () => {
         <div className="grid grid-cols-1 grid-rows-3 lg:grid-rows-2 md:grid-rows-2 justify-center items-center lg:grid-cols-2 md:grid-cols-2 gap-3 mt-3 pt-3 w-full lg:w-2/3 md:w-full">
           <div className="hover:scale-105 cursor-pointer duration-500 flex flex-col justify-center items-center text-center rounded shadow-xl border-2 border-gray-500 h-full w-full p-6">
             <h2 className="text-lg text-gray-700">NextJS</h2>
-            <p className="text-sm text-gray-600">
-              The React framework for production
-            </p>
+            <p className="text-sm text-gray-600">The React framework for production</p>
             <a
               className="text-sm text-violet-500 underline decoration-dotted underline-offset-2 cursor-pointer mt-3"
               href="https://nextjs.org/"
@@ -36,8 +35,8 @@ const Home: NextPage = () => {
           <div className="hover:scale-105 cursor-pointer duration-500 flex flex-col justify-center items-center text-center rounded shadow-xl border-2 border-gray-500 h-full w-full p-6">
             <h2 className="text-lg text-gray-700">TypeScript</h2>
             <p className="text-sm text-gray-600">
-              Strongly typed programming language that builds on JavaScript,
-              giving you better tooling at any scale
+              Strongly typed programming language that builds on JavaScript, giving you better
+              tooling at any scale
             </p>
             <a
               className="text-sm text-violet-500 underline decoration-dotted underline-offset-2 cursor-pointer mt-3"
@@ -64,9 +63,7 @@ const Home: NextPage = () => {
           </div>
           <div className="hover:scale-105 cursor-pointer duration-500 flex flex-col justify-center items-center text-center rounded shadow-xl border-2 border-gray-500 h-full w-full p-6">
             <h2 className="text-lg text-gray-700">tRPC</h2>
-            <p className="text-sm text-gray-600">
-              End-to-end typesafe APIs made easy
-            </p>
+            <p className="text-sm text-gray-600">End-to-end typesafe APIs made easy</p>
             <a
               className="text-sm text-violet-500 underline decoration-dotted underline-offset-2 cursor-pointer mt-3"
               href="https://trpc.io/"

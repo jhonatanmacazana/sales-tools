@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+
 import { createRouter } from "./context";
 
 export const authRouter = createRouter()
