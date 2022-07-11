@@ -14,7 +14,7 @@ const envSchema = z.object({
   NEXTAUTH_URL: z.string().url(),
   NODE_ENV: z.enum(["development", "test", "production"]),
   PORT: z.number().optional(),
-  VERCEL_URL: z.string().url().optional(),
+  VERCEL_URL: z.string().optional(),
 });
 
 const env = envSchema.safeParse(process.env);
