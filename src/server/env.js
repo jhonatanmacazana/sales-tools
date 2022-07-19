@@ -7,7 +7,7 @@ const { z } = require("zod");
 
 /* eslint sort-keys: "error" */
 const envSchema = z.object({
-  DATABASE_URL: z.string().url().optional(),
+  DATABASE_URL: z.string().url(),
   FACEBOOK_CLIENT_ID: z.string(),
   FACEBOOK_CLIENT_SECRET: z.string(),
   NEXTAUTH_SECRET: z.string(),
@@ -25,11 +25,9 @@ const formatErrors = (
 ) =>
   Object.entries(errors)
     .map(([name, value]) => {
-      if (value && "_errors" in value)
-        return `${name}: ${value._errors.join(", ")}\n`;
+      if (value && "_errors" in value) return `${name}: ${value._errors.join(", ")}\n`;
     })
     .filter(Boolean);
-
 
 if (!env.success) {
   console.error("❌ Invalid environment variables:\n", ...formatErrors(env.error.format()));
