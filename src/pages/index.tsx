@@ -29,23 +29,23 @@ const UserInformation = () => {
 
   if (!data)
     return (
-      <div className="flex w-full flex-col items-center justify-center pt-6 text-xl ">
-        <div className="">Hola! Haz click para ingresar</div>
+      <div className="flex w-full flex-col items-center justify-center pt-6 text-xl">
+        <p>Hola! Haz click para ingresar</p>
         <div className="p-2" />
         <button
           className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
           onClick={() => signIn("facebook")}
         >
-          <FaFacebook />
+          <FaFacebook size={24} />
           <span>Ingresar con Facebook</span>
         </button>
       </div>
     );
 
   return (
-    <div className="flex w-full flex-col items-center justify-center pt-6 text-2xl text-blue-500">
+    <div className="flex w-full flex-col items-center justify-center pt-6 text-xl">
       <p>{`Hola ${data.user?.name}!`}</p>
-
+      <div className="p-2" />
       <button
         className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
         onClick={() => signOut()}
