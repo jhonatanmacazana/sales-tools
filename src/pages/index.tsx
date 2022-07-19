@@ -1,8 +1,8 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-
-import { trpc } from "@/utils/trpc";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { FaFacebook, FaSignOutAlt } from "react-icons/fa";
 
 interface CardProps {
   url: string;
@@ -24,9 +24,40 @@ const Card: React.FC<CardProps> = ({ url, title, description }) => {
   );
 };
 
-const Home: NextPage = () => {
-  const hello = trpc.proxy.example.hello.useQuery({ text: "desde Cieneguilla" });
+const UserInformation = () => {
+  const { data } = useSession();
 
+  if (!data)
+    return (
+      <div className="flex w-full flex-col items-center justify-center pt-6 text-xl ">
+        <div className="">Hola! Haz click para ingresar</div>
+        <div className="p-2" />
+        <button
+          className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
+          onClick={() => signIn("facebook")}
+        >
+          <FaFacebook />
+          <span>Ingresar con Facebook</span>
+        </button>
+      </div>
+    );
+
+  return (
+    <div className="flex w-full flex-col items-center justify-center pt-6 text-2xl text-blue-500">
+      <p>{`Hola ${data.user?.name}!`}</p>
+
+      <button
+        className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
+        onClick={() => signOut()}
+      >
+        <FaSignOutAlt size={24} />
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+  );
+};
+
+const Home: NextPage = () => {
   return (
     <>
       <Head>
@@ -56,9 +87,7 @@ const Home: NextPage = () => {
           />
         </div>
 
-        <div className="flex w-full items-center justify-center pt-6 text-2xl text-blue-500">
-          {hello.data ? <p>{hello.data.greeting}</p> : <p>Cargando..</p>}
-        </div>
+        <UserInformation />
       </div>
     </>
   );
