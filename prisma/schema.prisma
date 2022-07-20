@@ -38,13 +38,15 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime? @map("email_verified")
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
+    id                String             @id @default(cuid())
+    name              String?
+    email             String?            @unique
+    emailVerified     DateTime?          @map("email_verified")
+    image             String?
+    accounts          Account[]
+    sessions          Session[]
+    transactions      Transaction[]
+    transactionBlocks TransactionBlock[]
 
     @@map("user")
 }
@@ -58,16 +60,44 @@ model VerificationToken {
     @@map("verification_tokens")
 }
 
+// Business Logic
 model Example {
     id String @id @default(cuid())
 
     @@map("examples")
 }
 
+enum TransactionType {
+    CASH
+    CARD
+    TRANSFER
+    YAPE
+    PLIN
+    OTHERS
+}
+
 model Transaction {
-    id          String @id @default(cuid())
-    ammount     Float
-    description String
+    id               String           @id @default(cuid())
+    ammount          Float
+    description      String?
+    type             TransactionType
+    createdBy        String           @map("created_by")
+    createdAt        DateTime         @default(now()) @map("created_at")
+    updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at")
+    creator          User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+    transactionBlock TransactionBlock @relation(fields: [id], references: [id], onDelete: Cascade)
 
     @@map("transactions")
+}
+
+model TransactionBlock {
+    id String @id @default(cuid())
+
+    createdBy    String        @map("created_by")
+    createdAt    DateTime      @default(now()) @map("created_at")
+    updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at")
+    creator      User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+    transactions Transaction[]
+
+    @@map("transaction_blocks")
 }
