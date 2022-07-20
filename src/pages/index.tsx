@@ -1,8 +1,8 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { FaFacebook, FaSignOutAlt } from "react-icons/fa";
+import { Link } from "@/components/Link";
 
 interface CardProps {
   url: string;
@@ -15,10 +15,11 @@ const Card: React.FC<CardProps> = ({ url, title, description }) => {
     <div className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded border-2 border-gray-500 p-6 text-center shadow-xl duration-500 hover:scale-105">
       <h2 className="text-lg text-gray-300">{title}</h2>
       <p className="text-sm text-gray-400">{description}</p>
-      <Link href={url} passHref>
-        <a className="mt-3 cursor-pointer text-sm text-violet-500 underline decoration-dotted underline-offset-2">
-          Ver
-        </a>
+      <Link
+        href={url}
+        className="mt-3 cursor-pointer text-sm text-violet-500 underline decoration-dotted underline-offset-2"
+      >
+        Ver
       </Link>
     </div>
   );

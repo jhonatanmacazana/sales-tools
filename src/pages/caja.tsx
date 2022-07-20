@@ -20,6 +20,7 @@ const CajaPage: NextPage = () => {
     handleSelectCategory(selected as SummaryCategory);
   }, [handleSelectCategory, selected, unselectAll]);
 
+  const category = getSelectedCategory();
   return (
     <>
       <Head>
@@ -35,7 +36,7 @@ const CajaPage: NextPage = () => {
 
         <div className="flex w-11/12 flex-col gap-12 lg:w-5/6 lg:flex-row xl:w-4/5 ">
           <Summary summaryState={summaryState} />
-          <Details categorySelected={getSelectedCategory()} />
+          <Details categoryId={category?.id} categoryLabel={category?.label} />
         </div>
       </div>
     </>

@@ -1,44 +1,67 @@
 import { SummaryState } from "@/lib/hooks/useSummaryState";
+import { trpc } from "@/utils/trpc";
 
 import { Card } from "./Card";
 import { SummaryRow } from "./SummaryRow";
 
 export const Summary: React.FC<{ summaryState: SummaryState }> = ({ summaryState }) => {
+  const summary = trpc.proxy.transaction.summary.useQuery();
+
+  if (summary.isLoading) return <div>Loading...</div>;
+
+  if (summary.isError) return <div>Error</div>;
+
   return (
     <Card title="Resumen">
       <ul className="w-full space-y-3">
         <li>
           <SummaryRow
-            title="Efectivo"
-            ammount={summaryState.Efectivo.ammount}
-            isSelected={summaryState.Efectivo.isSelected}
+            id="CASH"
+            title={summaryState.CASH.label}
+            amount={summary.data!.CASH}
+            isSelected={summaryState.CASH.isSelected}
           />
         </li>
-        <SummaryRow
-          title="Transferencia"
-          ammount={summaryState.Transferencia.ammount}
-          isSelected={summaryState.Transferencia.isSelected}
-        />
-        <SummaryRow
-          title="Tarjeta"
-          ammount={summaryState.Tarjeta.ammount}
-          isSelected={summaryState.Tarjeta.isSelected}
-        />
-        <SummaryRow
-          title="Yape"
-          ammount={summaryState.Yape.ammount}
-          isSelected={summaryState.Yape.isSelected}
-        />
-        <SummaryRow
-          title="Plin"
-          ammount={summaryState.Plin.ammount}
-          isSelected={summaryState.Plin.isSelected}
-        />
-        <SummaryRow
-          title="Otros"
-          ammount={summaryState.Otros.ammount}
-          isSelected={summaryState.Otros.isSelected}
-        />
+        <li>
+          <SummaryRow
+            id="TRANSFER"
+            title={summaryState.TRANSFER.label}
+            amount={summary.data!.TRANSFER}
+            isSelected={summaryState.TRANSFER.isSelected}
+          />
+        </li>
+        <li>
+          <SummaryRow
+            id="CARD"
+            title={summaryState.CARD.label}
+            amount={summary.data!.CARD}
+            isSelected={summaryState.CARD.isSelected}
+          />
+        </li>
+        <li>
+          <SummaryRow
+            id="YAPE"
+            title={summaryState.YAPE.label}
+            amount={summary.data!.YAPE}
+            isSelected={summaryState.YAPE.isSelected}
+          />
+        </li>
+        <li>
+          <SummaryRow
+            id="PLIN"
+            title={summaryState.PLIN.label}
+            amount={summary.data!.PLIN}
+            isSelected={summaryState.PLIN.isSelected}
+          />
+        </li>
+        <li>
+          <SummaryRow
+            id="OTHERS"
+            title={summaryState.OTHERS.label}
+            amount={summary.data!.OTHERS}
+            isSelected={summaryState.OTHERS.isSelected}
+          />
+        </li>
       </ul>
     </Card>
   );

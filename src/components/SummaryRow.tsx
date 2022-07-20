@@ -5,10 +5,11 @@ import { formatMoney } from "@/lib/formatMoney";
 import { Link } from "./Link";
 
 export const SummaryRow: React.FC<{
+  id: string;
   title: string;
-  ammount: number;
+  amount: number;
   isSelected?: boolean;
-}> = ({ title, ammount, isSelected }) => {
+}> = ({ id, title, amount, isSelected }) => {
   const router = useRouter();
   const { selected } = router.query;
 
@@ -17,13 +18,14 @@ export const SummaryRow: React.FC<{
       className={`flex w-full justify-between gap-2 rounded-lg px-4 py-2 text-base hover:cursor-pointer ${
         !isSelected ? "bg-gray-600 hover:bg-gray-500" : "bg-gray-400"
       }`}
-      href={selected !== title ? `/caja?selected=${title}` : "/caja"}
+      href={selected !== id ? `/caja?selected=${id}` : "/caja"}
+      replace
       shallow
     >
       <p>{title}</p>
 
       <div className="flex place-items-center gap-2 text-sm">
-        <p>{formatMoney(ammount)}</p>
+        <p>{formatMoney(amount)}</p>
       </div>
     </Link>
   );
