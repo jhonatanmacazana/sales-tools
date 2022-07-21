@@ -3,6 +3,7 @@ import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { FaFacebook, FaSignOutAlt } from "react-icons/fa";
 import { Link } from "@/components/Link";
+import { Button } from "@/components/Button";
 
 interface CardProps {
   url: string;
@@ -33,13 +34,10 @@ const UserInformation = () => {
       <div className="flex w-full flex-col items-center justify-center pt-6 text-xl">
         <p>Hola! Haz click para ingresar</p>
         <div className="p-2" />
-        <button
-          className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
-          onClick={() => signIn("facebook")}
-        >
+        <Button onClick={() => signIn("facebook")}>
           <FaFacebook size={24} />
           <span>Ingresar con Facebook</span>
-        </button>
+        </Button>
       </div>
     );
 
@@ -47,13 +45,10 @@ const UserInformation = () => {
     <div className="flex w-full flex-col items-center justify-center pt-6 text-xl">
       <p>{`Hola ${data.user?.name}!`}</p>
       <div className="p-2" />
-      <button
-        className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-xl text-black"
-        onClick={() => signOut()}
-      >
+      <Button onClick={() => signOut()}>
         <FaSignOutAlt size={24} />
         <span>Cerrar sesión</span>
-      </button>
+      </Button>
     </div>
   );
 };
