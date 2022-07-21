@@ -25,7 +25,34 @@ export const Details: React.FC<{
     { enabled: Boolean(categoryId) }
   );
 
-  const { mutate: createTransactionMutation, isLoading } =
+  const { mutate: deleteMutation } = trpc.proxy.transaction.delete.useMutation({
+    onSuccess: async (transactionDeleted) => {
+      if (!categoryId) return;
+
+      await Promise.all([
+        tctx.queryClient.cancelQueries(["transaction.getByType"]),
+        tctx.queryClient.cancelQueries(["transaction.summary"]),
+      ]);
+
+      const previousSummary = tctx.queryClient.getQueryData(["transaction.summary", null]);
+      const previousTransactions = tctx.queryClient.getQueryData([
+        "transaction.getByType",
+        { type: categoryId },
+      ]);
+
+      tctx.queryClient.setQueryData(["transaction.summary", null], (old: any) => ({
+        ...old,
+        [categoryId]: old[categoryId] - transactionDeleted.amount,
+      }));
+      tctx.queryClient.setQueryData(["transaction.getByType", { type: categoryId }], (old) =>
+        (old as Transaction[]).filter((t) => t.id !== transactionDeleted.id)
+      );
+
+      return { previousSummary, previousTransactions };
+    },
+  });
+
+  const { mutate: createTransactionMutation, isLoading: isCreateMutationLoading } =
     trpc.proxy.transaction.create.useMutation({
       onSuccess: async (newTransaction) => {
         if (!categoryId) return;
@@ -97,10 +124,10 @@ export const Details: React.FC<{
 
             <button
               className="flex w-56 items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:shadow-none dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              disabled={isLoading}
+              disabled={isCreateMutationLoading}
               onClick={() => createTransactionMutation({ amount, description, type: categoryId })}
             >
-              {isLoading && <Spinner />}
+              {isCreateMutationLoading && <Spinner />}
               Registrar
             </button>
           </div>
@@ -117,7 +144,10 @@ export const Details: React.FC<{
                     <MdEdit />
                   </Button>
 
-                  <Button className="text-md p-1 text-red-500 hover:bg-gray-700">
+                  <Button
+                    className="text-md p-1 text-red-500 hover:bg-gray-700"
+                    onClick={() => deleteMutation(transaction.id)}
+                  >
                     <MdDelete />
                   </Button>
                 </div>

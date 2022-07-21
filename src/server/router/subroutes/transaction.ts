@@ -61,4 +61,30 @@ export const transactionRouter = t.router({
         },
       });
     }),
+
+  update: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        type: z.nativeEnum(TransactionType),
+        amount: z.number(),
+        description: z.string().min(0).max(400),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.prisma.transaction.update({
+        where: { id: input.id },
+        data: {
+          type: input.type,
+          amount: input.amount,
+          description: input.description,
+        },
+      });
+    }),
+
+  delete: t.procedure.input(z.string()).mutation(async ({ ctx, input }) => {
+    return await ctx.prisma.transaction.delete({
+      where: { id: input },
+    });
+  }),
 });
