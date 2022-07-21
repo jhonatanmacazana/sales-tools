@@ -15,7 +15,12 @@ export const Details: React.FC<{
 
   const tctx = trpc.useContext();
 
-  const { mutate: createTransactionMutation } = trpc.proxy.transaction.create.useMutation();
+  const { mutate: createTransactionMutation } = trpc.proxy.transaction.create.useMutation({
+    onSuccess: () => {
+      tctx.queryClient.invalidateQueries(["transaction.getByType"]);
+      tctx.queryClient.invalidateQueries(["transaction.summary"]);
+    },
+  });
   const transactions = trpc.proxy.transaction.getByType.useQuery(
     { type: categoryId! },
     { enabled: Boolean(categoryId) }
@@ -23,9 +28,6 @@ export const Details: React.FC<{
 
   const addTransaction = () => {
     createTransactionMutation({ amount, description, type: categoryId });
-
-    tctx.queryClient.invalidateQueries("transaction.getByType");
-    tctx.queryClient.invalidateQueries("transaction.summary");
 
     setAmount(0);
     setDescription("");
