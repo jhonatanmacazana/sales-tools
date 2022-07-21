@@ -27,7 +27,7 @@ export const Details: React.FC<{
   );
 
   const addTransaction = () => {
-    createTransactionMutation({ amount, description, type: categoryId });
+    createTransactionMutation({ amount, description, type: categoryId! });
 
     setAmount(0);
     setDescription("");
