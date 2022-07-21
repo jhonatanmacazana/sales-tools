@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MdDelete, MdEdit } from "react-icons/md";
 
 import { SummaryCategory } from "@/lib/hooks/useSummaryState";
 import { trpc } from "@/utils/trpc";
@@ -7,6 +8,8 @@ import { Card } from "./Card";
 import { InputNumber, InputText } from "./Inputs";
 import { Transaction } from "@prisma/client";
 import { Spinner } from "./Spinner";
+import { Button } from "./Button";
+import { formatMoney } from "@/lib/formatMoney";
 
 export const Details: React.FC<{
   categoryId?: SummaryCategory;
@@ -75,14 +78,6 @@ export const Details: React.FC<{
       {categoryId && (
         <div className="flex flex-grow flex-col">
           <div className="flex w-full flex-col gap-4 rounded-xl border border-slate-300 px-4 py-4 shadow-xl lg:flex-row">
-            <InputText
-              id="description"
-              label="Descripción"
-              placeholder="Descripción"
-              value={description}
-              setValue={setDescription}
-            />
-
             <InputNumber
               className="w-2/5"
               id="amount"
@@ -90,6 +85,14 @@ export const Details: React.FC<{
               placeholder="Monto"
               value={amount}
               setValue={setAmount}
+            />
+
+            <InputText
+              id="description"
+              label="Descripción"
+              placeholder="Descripción"
+              value={description}
+              setValue={setDescription}
             />
 
             <button
@@ -106,9 +109,18 @@ export const Details: React.FC<{
 
           <ul className="scrollbar flex max-h-60 w-full flex-grow flex-col gap-4 overflow-y-scroll rounded-xl border border-slate-300 px-4 py-4 shadow-xl">
             {transactions.data?.map((transaction) => (
-              <li className="flex min-w-[2rem] gap-2" key={transaction.id}>
-                <p>{transaction.description}</p>
-                <p>{transaction.amount}</p>
+              <li className="min-w-20 flex items-center justify-between gap-2" key={transaction.id}>
+                <p>{`${formatMoney(transaction.amount)} ${transaction.description || "-"}`}</p>
+
+                <div className="flex items-center justify-center">
+                  <Button className="text-md p-1 text-slate-500 hover:bg-gray-700">
+                    <MdEdit />
+                  </Button>
+
+                  <Button className="text-md p-1 text-red-500 hover:bg-gray-700">
+                    <MdDelete />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
