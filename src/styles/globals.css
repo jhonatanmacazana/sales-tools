@@ -5,3 +5,24 @@
 body {
   @apply bg-gray-900 text-gray-100;
 }
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background: theme(colors.gray.600);
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: theme(colors.gray.400);
+    border-radius: 10px;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: theme(colors.gray.300);
+  }
+}
