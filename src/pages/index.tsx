@@ -2,16 +2,14 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { FaFacebook, FaSignOutAlt } from "react-icons/fa";
-import { Link } from "@/components/Link";
-import { Button } from "@/components/Button";
 
-interface CardProps {
+import { Link } from "@/components/Link";
+
+const Card: React.FC<{
   url: string;
   title?: string;
   description?: string;
-}
-
-const Card: React.FC<CardProps> = ({ url, title, description }) => {
+}> = ({ url, title, description }) => {
   return (
     <div className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded border-2 border-gray-500 p-6 text-center shadow-xl duration-500 hover:scale-105">
       <h2 className="text-lg text-gray-300">{title}</h2>
@@ -31,13 +29,16 @@ const UserInformation = () => {
 
   if (!data)
     return (
-      <div className="flex w-full flex-col items-center justify-center pt-6 text-xl">
+      <div className="flex w-full flex-col items-center justify-center pt-6 text-lg">
         <p>Hola! Haz click para ingresar</p>
         <div className="p-2" />
-        <Button onClick={() => signIn("facebook")}>
+        <button
+          className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-lg text-black"
+          onClick={() => signIn("facebook")}
+        >
           <FaFacebook size={24} />
           <span>Ingresar con Facebook</span>
-        </Button>
+        </button>
       </div>
     );
 
@@ -45,10 +46,13 @@ const UserInformation = () => {
     <div className="flex w-full flex-col items-center justify-center pt-6 text-xl">
       <p>{`Hola ${data.user?.name}!`}</p>
       <div className="p-2" />
-      <Button onClick={() => signOut()}>
+      <button
+        className="flex items-center gap-2 rounded bg-gray-200 px-4 py-2 text-lg text-black"
+        onClick={() => signOut()}
+      >
         <FaSignOutAlt size={24} />
         <span>Cerrar sesión</span>
-      </Button>
+      </button>
     </div>
   );
 };

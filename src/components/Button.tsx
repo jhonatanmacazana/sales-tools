@@ -1,16 +1,14 @@
-import { ReactNode } from "react";
-
 export const Button: React.FC<{
   className?: string;
-  children: ReactNode;
+  children: React.ReactNode;
   onClick?: () => void;
-}> = ({ className, children, onClick }) => {
+  type?: "button" | "submit" | "reset";
+}> = ({ className, children, onClick, type }) => {
   return (
     <button
-      className={`flex items-center gap-2 rounded ${
-        className || "bg-gray-200 px-4 py-2 text-xl text-black"
-      }`}
+      className={`flex items-center gap-2 rounded ${className}`}
       onClick={onClick}
+      type={type}
     >
       {children}
     </button>

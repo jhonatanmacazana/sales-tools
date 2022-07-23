@@ -6,7 +6,6 @@ import { prisma } from "@/server/db/client";
 import { env } from "@/server/env";
 
 export const nextAuthOptions: NextAuthOptions = {
-  debug: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     FacebookProvider({
