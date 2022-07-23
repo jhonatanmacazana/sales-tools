@@ -1,18 +1,21 @@
-import { Transaction } from "@prisma/client";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { Transaction, TransactionType } from "@prisma/client";
 import type { NextPage } from "next";
 import Head from "next/head";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { MdDelete, MdEdit } from "react-icons/md";
 
+import LoadingSVG from "@/assets/puff.svg";
 import { Button } from "@/components/Button";
 import { InputNumber, InputText } from "@/components/Inputs";
 import { Link } from "@/components/Link";
 import { Spinner } from "@/components/Spinner";
-
 import { trpc } from "@/utils/trpc";
 
-export const formatMoney = (money: number) => `S/. ${money.toFixed(2)}`;
+const formatMoney = (money: number) => `S/. ${money.toFixed(2)}`;
+const objectKeys = <T,>(obj: T) => Object.keys(obj) as Array<keyof T>;
 
 const SummaryRow: React.FC<{
   id: string;
@@ -46,10 +49,8 @@ export const Card: React.FC<{
   title: string;
 }> = ({ children, title }) => {
   return (
-    <div className="flex min-h-[15rem] w-full flex-col rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 shadow-lg ring-1 ring-slate-900/5 ">
+    <div className="flex min-h-[15rem] w-full flex-col rounded-xl border border-gray-700 bg-gray-800 px-4 py-4 shadow-lg ring-1 ring-slate-900/5">
       <h3 className="pb-2 text-center text-2xl">{title}</h3>
-
-      <hr className="py-2" />
 
       <div className="text-md flex grow flex-col items-center justify-center gap-2 break-words text-center">
         {children}
@@ -58,64 +59,81 @@ export const Card: React.FC<{
   );
 };
 
+export const useSummaryState = () => {
+  const [summaryState, setSummaryState] = useState({
+    [TransactionType.CASH]: { label: "Efectivo", isSelected: false },
+    [TransactionType.TRANSFER]: { label: "Transferencia", isSelected: false },
+    [TransactionType.CARD]: { label: "Tarjeta", isSelected: false },
+    [TransactionType.YAPE]: { label: "Yape", isSelected: false },
+    [TransactionType.PLIN]: { label: "Plin", isSelected: false },
+    [TransactionType.OTHERS]: { label: "Otros", isSelected: false },
+  });
+
+  const handleSelectCategory = useCallback((category: keyof typeof summaryState) => {
+    setSummaryState((old) => ({
+      ...old,
+      CASH: { ...old.CASH, isSelected: false },
+      TRANSFER: { ...old.TRANSFER, isSelected: false },
+      CARD: { ...old.CARD, isSelected: false },
+      YAPE: { ...old.YAPE, isSelected: false },
+      PLIN: { ...old.PLIN, isSelected: false },
+      OTHERS: { ...old.OTHERS, isSelected: false },
+      [category]: { ...old[category], isSelected: !old[category].isSelected },
+    }));
+  }, []);
+
+  const unselectAll = useCallback(() => {
+    setSummaryState((old) => ({
+      ...old,
+      CASH: { ...old.CASH, isSelected: false },
+      TRANSFER: { ...old.TRANSFER, isSelected: false },
+      CARD: { ...old.CARD, isSelected: false },
+      YAPE: { ...old.YAPE, isSelected: false },
+      PLIN: { ...old.PLIN, isSelected: false },
+      OTHERS: { ...old.OTHERS, isSelected: false },
+    }));
+  }, []);
+
+  const getSelectedCategory = useCallback(() => {
+    const selectedCategory = objectKeys(summaryState).find((key) => summaryState[key].isSelected);
+
+    if (!selectedCategory) return null;
+    return { ...summaryState[selectedCategory], id: selectedCategory };
+  }, [summaryState]);
+
+  return { summaryState, getSelectedCategory, handleSelectCategory, unselectAll };
+};
+
+type SummaryState = ReturnType<typeof useSummaryState>["summaryState"];
+type SummaryCategory = keyof SummaryState;
+
 export const Summary: React.FC<{ summaryState: SummaryState }> = ({ summaryState }) => {
+  const [animationParent] = useAutoAnimate<HTMLUListElement>();
   const summary = trpc.proxy.transaction.summary.useQuery();
 
-  if (summary.isLoading) return <div>Loading...</div>;
+  if (summary.isLoading)
+    return (
+      <div className="flex animate-fade-in-delay justify-center p-8">
+        <Image src={LoadingSVG} alt="loading..." width={200} height={200} />
+      </div>
+    );
 
   if (summary.isError) return <div>Error</div>;
 
   return (
     <Card title="Resumen">
-      <ul className="w-full space-y-3">
-        <li>
-          <SummaryRow
-            id="CASH"
-            title={summaryState.CASH.label}
-            amount={summary.data!.CASH}
-            isSelected={summaryState.CASH.isSelected}
-          />
-        </li>
-        <li>
-          <SummaryRow
-            id="TRANSFER"
-            title={summaryState.TRANSFER.label}
-            amount={summary.data!.TRANSFER}
-            isSelected={summaryState.TRANSFER.isSelected}
-          />
-        </li>
-        <li>
-          <SummaryRow
-            id="CARD"
-            title={summaryState.CARD.label}
-            amount={summary.data!.CARD}
-            isSelected={summaryState.CARD.isSelected}
-          />
-        </li>
-        <li>
-          <SummaryRow
-            id="YAPE"
-            title={summaryState.YAPE.label}
-            amount={summary.data!.YAPE}
-            isSelected={summaryState.YAPE.isSelected}
-          />
-        </li>
-        <li>
-          <SummaryRow
-            id="PLIN"
-            title={summaryState.PLIN.label}
-            amount={summary.data!.PLIN}
-            isSelected={summaryState.PLIN.isSelected}
-          />
-        </li>
-        <li>
-          <SummaryRow
-            id="OTHERS"
-            title={summaryState.OTHERS.label}
-            amount={summary.data!.OTHERS}
-            isSelected={summaryState.OTHERS.isSelected}
-          />
-        </li>
+      <ul className="w-full space-y-3" ref={animationParent}>
+        {summary.data &&
+          objectKeys(summary.data).map((summaryItem) => (
+            <li key={summaryItem}>
+              <SummaryRow
+                amount={summary.data[summaryItem]}
+                id={summaryItem}
+                title={summaryState[summaryItem].label}
+                isSelected={summaryState[summaryItem].isSelected}
+              />
+            </li>
+          ))}
       </ul>
     </Card>
   );
@@ -235,57 +253,6 @@ export const Details: React.FC<{
     </Card>
   );
 };
-
-export const useSummaryState = () => {
-  const [summaryState, setSummaryState] = useState({
-    CASH: { label: "Efectivo", amount: 10, isSelected: false },
-    TRANSFER: { label: "Transferencia", amount: 10, isSelected: false },
-    CARD: { label: "Tarjeta", amount: 10, isSelected: false },
-    YAPE: { label: "Yape", amount: 10, isSelected: false },
-    PLIN: { label: "Plin", amount: 10, isSelected: false },
-    OTHERS: { label: "Otros", amount: 10, isSelected: false },
-  });
-
-  const handleSelectCategory = useCallback((category: keyof typeof summaryState) => {
-    setSummaryState((old) => ({
-      ...old,
-      CASH: { ...old.CASH, isSelected: false },
-      TRANSFER: { ...old.TRANSFER, isSelected: false },
-      CARD: { ...old.CARD, isSelected: false },
-      YAPE: { ...old.YAPE, isSelected: false },
-      PLIN: { ...old.PLIN, isSelected: false },
-      OTHERS: { ...old.OTHERS, isSelected: false },
-      [category]: { ...old[category], isSelected: !old[category].isSelected },
-    }));
-  }, []);
-
-  const unselectAll = useCallback(() => {
-    setSummaryState((old) => ({
-      ...old,
-      CASH: { ...old.CASH, isSelected: false },
-      TRANSFER: { ...old.TRANSFER, isSelected: false },
-      CARD: { ...old.CARD, isSelected: false },
-      YAPE: { ...old.YAPE, isSelected: false },
-      PLIN: { ...old.PLIN, isSelected: false },
-      OTHERS: { ...old.OTHERS, isSelected: false },
-    }));
-  }, []);
-
-  const getSelectedCategory = useCallback(() => {
-    const selectedCategory = (Object.keys(summaryState) as (keyof typeof summaryState)[]).find(
-      (key) => summaryState[key].isSelected
-    );
-
-    if (!selectedCategory) return null;
-    return { ...summaryState[selectedCategory], id: selectedCategory };
-  }, [summaryState]);
-
-  return { summaryState, getSelectedCategory, handleSelectCategory, unselectAll };
-};
-
-export type SummaryState = ReturnType<typeof useSummaryState>["summaryState"];
-
-export type SummaryCategory = keyof SummaryState;
 
 const CajaPage: NextPage = () => {
   const router = useRouter();

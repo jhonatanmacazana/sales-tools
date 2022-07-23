@@ -22,26 +22,22 @@ export const transactionRouter = t.router({
 
   summary: t.procedure.query(async ({ ctx }) => {
     const transactions = await ctx.prisma.transaction.findMany();
-    return {
-      [TransactionType.CARD]: transactions
-        .filter((t) => t.type === TransactionType.CARD)
-        .reduce((acc, t) => acc + t.amount, 0),
-      [TransactionType.CASH]: transactions
-        .filter((t) => t.type === TransactionType.CASH)
-        .reduce((acc, t) => acc + t.amount, 0),
-      [TransactionType.OTHERS]: transactions
-        .filter((t) => t.type === TransactionType.OTHERS)
-        .reduce((acc, t) => acc + t.amount, 0),
-      [TransactionType.PLIN]: transactions
-        .filter((t) => t.type === TransactionType.PLIN)
-        .reduce((acc, t) => acc + t.amount, 0),
-      [TransactionType.TRANSFER]: transactions
-        .filter((t) => t.type === TransactionType.TRANSFER)
-        .reduce((acc, t) => acc + t.amount, 0),
-      [TransactionType.YAPE]: transactions
-        .filter((t) => t.type === TransactionType.YAPE)
-        .reduce((acc, t) => acc + t.amount, 0),
-    };
+    const transactionSum = transactions.reduce(
+      (reducer, curr) => {
+        const type = curr.type;
+        reducer[type] = reducer[type] + curr.amount;
+        return reducer;
+      },
+      {
+        [TransactionType.CARD]: 0,
+        [TransactionType.CASH]: 0,
+        [TransactionType.OTHERS]: 0,
+        [TransactionType.PLIN]: 0,
+        [TransactionType.TRANSFER]: 0,
+        [TransactionType.YAPE]: 0,
+      }
+    );
+    return transactionSum;
   }),
 
   create: t.procedure
