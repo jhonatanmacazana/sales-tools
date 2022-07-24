@@ -45,8 +45,6 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    // transactions      Transaction[]
-    // transactionBlocks TransactionBlock[]
 
     @@map("user")
 }
@@ -81,22 +79,26 @@ model Transaction {
     amount      Float
     description String?         @db.Text
     type        TransactionType
-    // createdBy        String          @map("created_by")
+    // transactionBlockId String          @map("transaction_block_id")
     createdAt   DateTime        @default(now()) @map("created_at")
     updatedAt   DateTime        @default(now()) @updatedAt @map("updated_at")
+    // createdBy        String          @map("created_by")
     // creator          User            @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-    // transactionBlock TransactionBlock @relation(fields: [id], references: [id], onDelete: Cascade)
+
+    // transactionBlock TransactionBlock @relation(fields: [transactionBlockId], references: [id], onDelete: Cascade)
 
     @@map("transactions")
 }
 
 // model TransactionBlock {
-//     id String @id @default(cuid())
+//     id          String   @id @default(cuid())
+//     systemTotal Float    @map("system_total")
+//     realTotal   Float    @map("real_total")
+//     createdAt   DateTime @default(now()) @map("created_at")
+//     updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+//     // createdBy    String?       @map("created_by")
+//     // creator      User?         @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
-//     createdBy    String?       @map("created_by")
-//     createdAt    DateTime      @default(now()) @map("created_at")
-//     updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at")
-//     creator      User?         @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 //     transactions Transaction[]
 
 //     @@map("transaction_blocks")

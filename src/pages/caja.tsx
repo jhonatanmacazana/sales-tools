@@ -23,15 +23,12 @@ const SummaryRow: React.FC<{
   amount: number;
   isSelected?: boolean;
 }> = ({ id, title, amount, isSelected }) => {
-  const router = useRouter();
-  const { selected } = router.query;
-
   return (
     <Link
       className={`flex w-full justify-between gap-2 rounded-lg px-4 py-2 text-base hover:cursor-pointer ${
         !isSelected ? "bg-gray-600 hover:bg-gray-500" : "bg-gray-400"
       }`}
-      href={selected !== id ? `/caja?selected=${id}` : "/caja"}
+      href={isSelected ? "/caja" : `/caja?selected=${id}`}
       replace
       shallow
     >
@@ -44,7 +41,7 @@ const SummaryRow: React.FC<{
   );
 };
 
-export const Card: React.FC<{
+const Card: React.FC<{
   children: ReactNode;
   title: string;
 }> = ({ children, title }) => {
@@ -59,7 +56,7 @@ export const Card: React.FC<{
   );
 };
 
-export const useSummaryState = () => {
+const useSummaryState = () => {
   const [summaryState, setSummaryState] = useState({
     [TransactionType.CASH]: { label: "Efectivo", isSelected: false },
     [TransactionType.TRANSFER]: { label: "Transferencia", isSelected: false },
@@ -107,7 +104,7 @@ export const useSummaryState = () => {
 type SummaryState = ReturnType<typeof useSummaryState>["summaryState"];
 type SummaryCategory = keyof SummaryState;
 
-export const Summary: React.FC<{ summaryState: SummaryState }> = ({ summaryState }) => {
+const Summary: React.FC<{ summaryState: SummaryState }> = ({ summaryState }) => {
   const [animationParent] = useAutoAnimate<HTMLUListElement>();
   const summary = trpc.proxy.transaction.summary.useQuery();
 
@@ -119,33 +116,52 @@ export const Summary: React.FC<{ summaryState: SummaryState }> = ({ summaryState
     );
 
   if (summary.isError) return <div>Error</div>;
+  if (!summary.data) return <div>Error</div>;
+
+  const summaryKeys = objectKeys(summary.data);
+  const summaryTotal = summaryKeys.reduce((acc, curr) => acc + summary.data[curr], 0);
 
   return (
     <Card title="Resumen">
+      <div className="pb-2" />
+
       <ul className="w-full space-y-3" ref={animationParent}>
-        {summary.data &&
-          objectKeys(summary.data).map((summaryItem) => (
-            <li key={summaryItem}>
-              <SummaryRow
-                amount={summary.data[summaryItem]}
-                id={summaryItem}
-                title={summaryState[summaryItem].label}
-                isSelected={summaryState[summaryItem].isSelected}
-              />
-            </li>
-          ))}
+        {objectKeys(summary.data).map((summaryItem) => (
+          <li key={summaryItem}>
+            <SummaryRow
+              amount={summary.data[summaryItem]}
+              id={summaryItem}
+              title={summaryState[summaryItem].label}
+              isSelected={summaryState[summaryItem].isSelected}
+            />
+          </li>
+        ))}
       </ul>
+
+      <div className="pb-2" />
+
+      <div className="flex w-full justify-between gap-2">
+        <div className="flex w-full flex-col justify-between gap-2 rounded-lg border border-gray-600 p-2 text-base text-gray-500">
+          <p>Según el sistema ...</p>
+          <p className="text-sm">{formatMoney(summaryTotal)}</p>
+        </div>
+        <div className="flex w-full flex-col  justify-between gap-2 rounded-lg border border-gray-600 p-2 text-base text-gray-500">
+          <p>Realmente ...</p>
+          <p className="text-sm">{formatMoney(summaryTotal)}</p>
+        </div>
+        <div className="flex w-full flex-col  justify-center gap-2 rounded-lg border border-gray-600 p-2 text-base text-gray-500">
+          <p>{`${"Sobran"} ${0}`}</p>
+        </div>
+      </div>
     </Card>
   );
 };
 
-export const Details: React.FC<{
+const Details: React.FC<{
   categoryId?: SummaryCategory;
   categoryLabel?: string;
 }> = ({ categoryId, categoryLabel }) => {
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState(0);
-
+  const [animationParent] = useAutoAnimate<HTMLUListElement>();
   const tctx = trpc.useContext();
 
   const transactions = trpc.proxy.transaction.getByType.useQuery(
@@ -166,14 +182,53 @@ export const Details: React.FC<{
     },
   });
 
+  const title = categoryLabel ? `Detalles - ${categoryLabel}` : "Detalles";
+
+  return (
+    <Card title={title}>
+      {!categoryId && (
+        <p className="text-gray-400">Seleccione una categoria para modificar o agregar detalles</p>
+      )}
+
+      {categoryId && (
+        <ul
+          className="scrollbar flex h-4/5 w-full  flex-col gap-4 overflow-y-scroll rounded-xl border border-slate-300 px-4 py-4 shadow-xl"
+          ref={animationParent}
+        >
+          {transactions.data?.map((transaction) => (
+            <li className="flex min-w-full items-center justify-between gap-2" key={transaction.id}>
+              <p>{`${formatMoney(transaction.amount)} ${transaction.description || "-"}`}</p>
+
+              <div className="flex items-center justify-center">
+                <Button className="text-md p-1 text-slate-500 hover:bg-gray-700">
+                  <MdEdit />
+                </Button>
+
+                <Button
+                  className="text-md p-1 text-red-500 hover:bg-gray-700"
+                  onClick={() => deleteMutation(transaction.id)}
+                >
+                  <MdDelete />
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+};
+
+const TransactionForm: React.FC<{ categoryId?: SummaryCategory }> = ({ categoryId }) => {
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState(0);
+
+  const tctx = trpc.useContext();
+
   const { mutate: createTransactionMutation, isLoading: isCreateMutationLoading } =
     trpc.proxy.transaction.create.useMutation({
       onSuccess: async (newTransaction) => {
         if (!categoryId) return;
-
-        setAmount(0);
-        setDescription("");
-
         tctx.queryClient.setQueryData(["transaction.summary", null], (old: any) => ({
           ...old,
           [categoryId]: old[categoryId] + newTransaction.amount,
@@ -184,73 +239,45 @@ export const Details: React.FC<{
         ]);
       },
       onSettled: () => {
+        setAmount(0);
+        setDescription("");
         tctx.queryClient.invalidateQueries(["transaction.summary", null]);
         tctx.queryClient.invalidateQueries(["transaction.getByType", { type: categoryId }]);
       },
     });
 
-  const title = categoryLabel ? `Detalles - ${categoryLabel}` : "Detalles";
-
   return (
-    <Card title={title}>
-      {!categoryId && (
-        <p className="text-gray-400">Seleccione una categoria para modificar o agregar detalles</p>
-      )}
-      {categoryId && (
-        <div className="flex flex-grow flex-col">
-          <div className="flex w-full flex-col gap-4 rounded-xl border border-slate-300 px-4 py-4 shadow-xl lg:flex-row">
-            <InputNumber
-              className="w-2/5"
-              id="amount"
-              label="Monto"
-              placeholder="Monto"
-              value={amount}
-              setValue={setAmount}
-            />
+    <div className="flex h-full w-full flex-col gap-4 rounded-xl border border-slate-300 px-4 py-4 shadow-xl">
+      <div className="flex w-full flex-col gap-4 shadow-xl lg:flex-row">
+        <InputNumber
+          className="w-2/5"
+          id="amount"
+          label="Monto"
+          placeholder="Monto"
+          value={amount}
+          setValue={setAmount}
+        />
 
-            <InputText
-              id="description"
-              label="Descripción"
-              placeholder="Descripción"
-              value={description}
-              setValue={setDescription}
-            />
+        <InputText
+          id="description"
+          label="Descripción"
+          placeholder="Descripción"
+          value={description}
+          setValue={setDescription}
+        />
+      </div>
 
-            <button
-              className="flex w-56 items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:shadow-none dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              disabled={isCreateMutationLoading}
-              onClick={() => createTransactionMutation({ amount, description, type: categoryId })}
-            >
-              {isCreateMutationLoading && <Spinner />}
-              Registrar
-            </button>
-          </div>
-
-          <p className="pt-4 pb-2 text-gray-400">Movimientos</p>
-
-          <ul className="scrollbar flex max-h-60 w-full flex-grow flex-col gap-4 overflow-y-scroll rounded-xl border border-slate-300 px-4 py-4 shadow-xl">
-            {transactions.data?.map((transaction) => (
-              <li className="min-w-20 flex items-center justify-between gap-2" key={transaction.id}>
-                <p>{`${formatMoney(transaction.amount)} ${transaction.description || "-"}`}</p>
-
-                <div className="flex items-center justify-center">
-                  <Button className="text-md p-1 text-slate-500 hover:bg-gray-700">
-                    <MdEdit />
-                  </Button>
-
-                  <Button
-                    className="text-md p-1 text-red-500 hover:bg-gray-700"
-                    onClick={() => deleteMutation(transaction.id)}
-                  >
-                    <MdDelete />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </Card>
+      <div className="flex w-full justify-center">
+        <button
+          className="flex w-48 items-center justify-center rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:bg-blue-800 disabled:text-gray-400 disabled:shadow-none"
+          disabled={isCreateMutationLoading || !categoryId}
+          onClick={() => createTransactionMutation({ amount, description, type: categoryId! })}
+        >
+          {isCreateMutationLoading && <Spinner />}
+          Registrar
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -263,7 +290,7 @@ const CajaPage: NextPage = () => {
 
   useEffect(() => {
     if (!selected || typeof selected !== "string") return unselectAll();
-
+    if (!(selected in TransactionType)) return unselectAll();
     handleSelectCategory(selected as SummaryCategory);
   }, [handleSelectCategory, selected, unselectAll]);
 
@@ -276,16 +303,22 @@ const CajaPage: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="flex min-h-screen w-screen flex-col items-center justify-center overflow-y-scroll p-4">
+      <main className="flex min-h-screen w-screen flex-col items-center justify-center overflow-y-scroll p-4">
         <h2 className="text-4xl font-extrabold text-purple-300 md:text-7xl">CAJA</h2>
 
         <p className="pb-8 text-lg text-gray-300 md:text-2xl">Registre las transacciones de hoy</p>
+
+        <div className="flex w-11/12 lg:w-5/6 lg:flex-row xl:w-4/5 ">
+          <TransactionForm categoryId={category?.id} />
+        </div>
+
+        <div className="pb-8" />
 
         <div className="flex w-11/12 flex-col gap-12 lg:w-5/6 lg:flex-row xl:w-4/5 ">
           <Summary summaryState={summaryState} />
           <Details categoryId={category?.id} categoryLabel={category?.label} />
         </div>
-      </div>
+      </main>
     </>
   );
 };
